@@ -16,4 +16,7 @@ public interface MovieService {
     @GET("list_movies.json")
     Observable<List<Movie>> getAllMovies(@Query("page") int pageNumber);
 
+    @GET("list_movies.json")
+    Observable<List<Movie>> getAllMoviesByGenre(@Query("genre") String genre, @Query("page") int pageNumber);
+
 }

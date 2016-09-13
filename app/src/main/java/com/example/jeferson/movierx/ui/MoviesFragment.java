@@ -2,6 +2,7 @@ package com.example.jeferson.movierx.ui;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
@@ -13,6 +14,7 @@ import android.widget.ProgressBar;
 
 import com.example.jeferson.movierx.R;
 import com.example.jeferson.movierx.data.model.Movie;
+import com.example.jeferson.movierx.data.model.MovieGenre;
 import com.example.jeferson.movierx.data.service.MovieService;
 import com.example.jeferson.movierx.data.service.RetrofitFactory;
 import com.example.jeferson.movierx.ui.adapter.MovieAdapter;
@@ -21,6 +23,7 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnItemClick;
 import butterknife.Unbinder;
 import retrofit2.Retrofit;
 import rx.Observable;
@@ -33,6 +36,8 @@ import rx.schedulers.Schedulers;
  */
 public class MoviesFragment extends Fragment implements MovieAdapter.MovieListener {
 
+    private static final String MOVIE_CATEGORY_KEY = "MOVIE_CATEGORY_KEY";
+
     @BindView(R.id.rvMovies) RecyclerView mRvMovies;
     @BindView(R.id.progressBar) ProgressBar mProgressBar;
 
@@ -41,6 +46,7 @@ public class MoviesFragment extends Fragment implements MovieAdapter.MovieListen
     private Retrofit mRetrofit;
     private int mCurrentMoviePageNumber = 1;
     private MovieAdapter movieAdapter;
+    private MovieGenre mMovieGenre;
 
     @Override
     public void onAttach(Context context) {
@@ -52,6 +58,26 @@ public class MoviesFragment extends Fragment implements MovieAdapter.MovieListen
 
     public static MoviesFragment newInstance() {
         return new MoviesFragment();
+    }
+
+    public static MoviesFragment newInstance(MovieGenre movieGenre) {
+        MoviesFragment fragment = new MoviesFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString(MOVIE_CATEGORY_KEY, movieGenre.toString());
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        if(getArguments() != null) {
+            String movieCategory = getArguments().getString(MOVIE_CATEGORY_KEY);
+            if(movieCategory != null) {
+                mMovieGenre = MovieGenre.valueOf(movieCategory);
+            }
+        }
     }
 
     @Override
@@ -77,8 +103,14 @@ public class MoviesFragment extends Fragment implements MovieAdapter.MovieListen
 
         mProgressBar.setVisibility(View.VISIBLE);
 
-        Observable<List<Movie>> observable = mRetrofit.create(MovieService.class)
-                .getAllMovies(mCurrentMoviePageNumber);
+        Observable<List<Movie>> observable;
+        if(mMovieGenre != null) {
+            observable = mRetrofit.create(MovieService.class)
+                    .getAllMoviesByGenre(mMovieGenre.getValue(), mCurrentMoviePageNumber);
+        } else {
+            observable = mRetrofit.create(MovieService.class)
+                    .getAllMovies(mCurrentMoviePageNumber);
+        }
 
         observable.subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -118,4 +150,16 @@ public class MoviesFragment extends Fragment implements MovieAdapter.MovieListen
         mCurrentMoviePageNumber++;
         loadMoviesFromServer();
     }
+
+    @Override
+    public void onMovieClicked(Movie movie) {
+
+        mActivity.getSupportFragmentManager()
+                .beginTransaction()
+                .add(R.id.main_content, MoviesDetailFragment.newInstance(movie), null)
+                .addToBackStack("")
+                .commit();
+
+    }
+
 }

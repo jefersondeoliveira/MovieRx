@@ -42,6 +42,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ItemViewHold
     @Override
     public void onBindViewHolder(ItemViewHolder holder, int position) {
         final Movie movie = mMovies.get(position);
+
         if(canLoadMoreMovies(position)) {
             if(mMovieListener != null) {
                 mMovieListener.onLoadMoreData();
@@ -49,10 +50,20 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ItemViewHold
                 mLoading = true;
             }
         }
+
         Picasso.with(mContext)
             .load(movie.getMediumCoverImageUrl())
             .placeholder(R.drawable.placeholder)
             .into(holder.ivMoviePoster);
+
+        holder.ivMoviePoster.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(mMovieListener != null) {
+                    mMovieListener.onMovieClicked(movie);
+                }
+            }
+        });
     }
 
     private boolean canLoadMoreMovies(int currentPosition) {
@@ -87,6 +98,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ItemViewHold
 
     public interface MovieListener {
         void onLoadMoreData();
+        void onMovieClicked(Movie movie);
     }
 
 }

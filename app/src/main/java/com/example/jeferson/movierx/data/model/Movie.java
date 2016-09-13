@@ -1,5 +1,6 @@
 package com.example.jeferson.movierx.data.model;
 
+import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
@@ -63,4 +64,10 @@ public class Movie {
     public String getMediumCoverImageUrl() {
         return mediumCoverImageUrl;
     }
+
+    @Override
+    public String toString() {
+        return new Gson().toJson(this);
+    }
+
 }
